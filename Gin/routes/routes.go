@@ -2,6 +2,8 @@ package routes
 
 import (
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,21 +19,33 @@ type Usuario struct {
 //var usuarios []Usuario
 
 func SetRoutes(r *gin.Engine) {
+	//servir contenido estatico
+	r.Static("/static", "./static")
+
 	//cargar plantillas
-	r.LoadHTMLGlob("templates/*")
+	r.LoadHTMLGlob("templates/*.html")
 
 	//peticiones
 
 	//rutas estaticas
 	r.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.html", gin.H{
-			"Title":   "Ejemplo practico de Gin",
-			"Heading": "Esto no es un ejemplo",
-			"Message": "Bienvenido a mi pagina con Gin",
-		})
+		c.HTML(http.StatusOK, "index.html", nil)
 	})
 
-	r.Static("/static", "./static")
+	//iterar cada pagina que esta pasando
+	r.GET("/:page", func(c *gin.Context) {
+		page := c.Param("page")
+
+		if !strings.HasSuffix(page, ".html") { // si no tienen la extension html se la agregamos
+			page += ".html"
+		}
+
+		if _, err := os.Stat("templates/" + page); err == nil { // si la pagina existe
+			c.HTML(http.StatusOK, page, nil) //cargamos la pagina
+		} else {
+			c.HTML(http.StatusNotFound, "404.html", nil) // si no existe cargamos la pagina 404
+		}
+	})
 
 	//rutas dinamicas
 	/*
